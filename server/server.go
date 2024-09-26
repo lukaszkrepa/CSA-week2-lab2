@@ -2,9 +2,8 @@ package main
 
 import (
 	"bufio"
-	"flag"
-	"net"
 	"fmt"
+	"net"
 )
 
 type Message struct {
@@ -31,33 +30,46 @@ func handleClient(client net.Conn, clientid int, msgs chan Message) {
 	// recording which client it came from.
 }
 
+func handleConnection(conn net.Conn) {
+	reader := bufio.NewReader(conn)
+	for {
+		msg, _ := reader.ReadString('\n')
+		fmt.Println(msg)
+		fmt.Fprintln(conn, "OK")
+	}
+}
 func main() {
 	// Read in the network port we should listen on, from the commandline argument.
 	// Default to port 8030
-	portPtr := flag.String("port", ":8030", "port to listen on")
-	flag.Parse()
+	//portPtr := flag.String("port", ":8030", "port to listen on")
+	//flag.Parse()
 
 	//TODO Create a Listener for TCP connections on the port given above.
-
-	//Create a channel for connections
-	conns := make(chan net.Conn)
-	//Create a channel for messages
-	msgs := make(chan Message)
-	//Create a mapping of IDs to connections
-	clients := make(map[int]net.Conn)
-
-	//Start accepting connections
-	go acceptConns(ln, conns)
+	ln, _ := net.Listen("tcp", ":8030")
 	for {
-		select {
-		case conn := <-conns:
-			//TODO Deal with a new connection
-			// - assign a client ID
-			// - add the client to the clients map
-			// - start to asynchronously handle messages from this client
-		case msg := <-msgs:
-			//TODO Deal with a new message
-			// Send the message to all clients that aren't the sender
-		}
+		conn, _ := ln.Accept()
+		go handleConnection(conn)
 	}
+
+	////Create a channel for connections
+	//conns := make(chan net.Conn)
+	////Create a channel for messages
+	//msgs := make(chan Message)
+	////Create a mapping of IDs to connections
+	//clients := make(map[int]net.Conn)
+	//
+	////Start accepting connections
+	//go acceptConns(ln, conns)
+	//for {
+	//	select {
+	//	case conn := <-conns:
+	//		//TODO Deal with a new connection
+	//		// - assign a client ID
+	//		// - add the client to the clients map
+	//		// - start to asynchronously handle messages from this client
+	//	case msg := <-msgs:
+	//		//TODO Deal with a new message
+	//		// Send the message to all clients that aren't the sender
+	//	}
+	//}
 }
